@@ -15,13 +15,7 @@ func main() {
 	defer conn.Close()
 	for {
 		// 发送消息
-		msg, err := tnet.PackSend(1, "test", conn)
-		conn.Write(msg)
-		if err != nil {
-			fmt.Println("消息发送失败", err)
-			return
-		}
-		msg, err = tnet.PackSend(2, "test2", conn)
+		msg, err := tnet.Pack(1, []byte("test"))
 		conn.Write(msg)
 		if err != nil {
 			fmt.Println("消息发送失败", err)
@@ -32,10 +26,11 @@ func main() {
 		_, data, err := tnet.Unpack(conn)
 		if err != nil {
 			fmt.Println("消息收回", err)
+			conn.Close()
 			return
 		}
 
-		fmt.Println(data)
+		fmt.Println(string(data))
 		time.Sleep(time.Second)
 	}
 }

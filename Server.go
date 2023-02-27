@@ -1,16 +1,18 @@
 package tnet
 
 import (
+	"context"
 	"fmt"
 	"github/timzzx/tnet/types"
 	"net"
 	"sync"
+	"time"
 )
 
 type Server struct {
 	Name        string
 	Port        string
-	Connections map[string]net.Conn
+	Connections map[string]types.Connection
 	Handlers    map[int]types.Handler
 
 	mu sync.Mutex
@@ -20,7 +22,7 @@ func NewServer() *Server {
 	return &Server{
 		Name:        "tcp",
 		Port:        "9999",
-		Connections: make(map[string]net.Conn),
+		Connections: make(map[string]types.Connection),
 		Handlers:    make(map[int]types.Handler),
 	}
 }
@@ -44,42 +46,78 @@ func (s *Server) Start() {
 
 		// 获取用户id
 		uid := conn.RemoteAddr().String()
+
+		ctx, cancel := context.WithCancel(context.Background())
+		agent := NewConnection(uid, conn, ctx, cancel)
 		// 连接加入全局
-		s.addConnections(uid, conn)
+		s.addConnections(uid, agent)
 
 		// 逻辑控制
-		go s.proceess(conn)
+		go s.proceess(agent)
+
+		// 心跳
+		go s.heartbeat(agent)
 
 	}
 }
 
 // 逻辑控制
-func (s *Server) proceess(conn net.Conn) {
-	defer conn.Close()
+func (s *Server) proceess(agent types.Connection) {
+	defer s.claer(agent)
 	for {
 		// 获取消息
-		routerID, data, err := Unpack(conn)
+		routerID, data, err := Unpack(agent.GetConn())
 		if err != nil {
 			fmt.Println("消息解析失败：", err)
 			return
 		}
 
-		// 根据路由id调用处理逻辑
-		s.doHandler(routerID, data, conn)
+		// 处理心跳
+		if routerID != 0 {
+			// 根据路由id调用处理逻辑
+			go s.doHandler(routerID, data, agent)
+		}
+
 	}
 }
 
+// 心跳
+func (s *Server) heartbeat(agent types.Connection) {
+
+	ticker := time.NewTicker(5 * time.Second)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ticker.C:
+			msg, _ := Pack(0, nil)
+			_, err := agent.Send(msg)
+			if err != nil {
+				s.claer(agent)
+				return
+			}
+		}
+	}
+}
+
+// 清除
+func (s *Server) claer(agent types.Connection) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	agent.GetConn().Close()
+	delete(s.Connections, agent.GetUid())
+}
+
 // 根据路由调用处理逻辑
-func (s *Server) doHandler(id int, data string, conn net.Conn) {
-	s.Handlers[id].Do(data, conn)
+func (s *Server) doHandler(id int, data []byte, agent types.Connection) {
+	s.Handlers[id].Do(data, agent)
 }
 
 // 连接加入全局
-func (s *Server) addConnections(uid string, conn net.Conn) {
+func (s *Server) addConnections(uid string, agent types.Connection) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	s.Connections[uid] = conn
+	s.Connections[uid] = agent
 
 }
 
@@ -92,5 +130,8 @@ func (s *Server) AddHandlers(id int, handler types.Handler) {
 }
 
 func (s *Server) Stop() {
-
+	for _, agent := range s.Connections {
+		s.claer(agent)
+	}
+	fmt.Println("关闭服务器...")
 }
