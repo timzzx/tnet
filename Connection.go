@@ -33,3 +33,11 @@ func (c *Connection) GetUid() string {
 func (c *Connection) Send(data []byte) (n int, err error) {
 	return c.Conn.Write(data)
 }
+
+func (c *Connection) Cancel() {
+	c.cancel()
+}
+
+func (c *Connection) Ctx() context.Context {
+	return c.ctx
+}

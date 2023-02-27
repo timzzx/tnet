@@ -19,4 +19,5 @@ func (h *TestHandler) Do(data []byte, agent types.Connection) {
 	// 封包并发送
 	msg, _ := tnet.Pack(h.id, data)
 	agent.Send(msg)
+	// agent.Cancel()
 }

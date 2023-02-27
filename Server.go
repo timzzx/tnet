@@ -58,6 +58,12 @@ func (s *Server) Start() {
 		// 心跳
 		go s.heartbeat(agent)
 
+		// 监听连接关闭
+		select {
+		case <-ctx.Done():
+			s.claer(agent)
+		}
+
 	}
 }
 
