@@ -1,8 +1,8 @@
 package handlers
 
 import (
-	"github/timzzx/tnet"
-	"github/timzzx/tnet/types"
+	"github.com/timzzx/tnet"
+	"github.com/timzzx/tnet/types"
 )
 
 type TestHandler struct {

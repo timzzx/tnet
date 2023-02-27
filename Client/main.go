@@ -2,9 +2,10 @@ package main
 
 import (
 	"fmt"
-	"github/timzzx/tnet"
 	"net"
 	"time"
+
+	"github.com/timzzx/tnet"
 )
 
 func main() {

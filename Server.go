@@ -3,10 +3,11 @@ package tnet
 import (
 	"context"
 	"fmt"
-	"github/timzzx/tnet/types"
 	"net"
 	"sync"
 	"time"
+
+	"github.com/timzzx/tnet/types"
 )
 
 type Server struct {

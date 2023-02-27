@@ -1,12 +1,13 @@
 package main
 
 import (
-	"github/timzzx/tnet"
 	"os"
 	"os/signal"
 	"syscall"
 
-	"github/timzzx/tnet/handlers"
+	"github.com/timzzx/tnet"
+
+	"github.com/timzzx/tnet/handlers"
 )
 
 func main() {

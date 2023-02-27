@@ -1,3 +1,3 @@
-module github/timzzx/tnet
+module github.com/timzzx/tnet
 
 go 1.19

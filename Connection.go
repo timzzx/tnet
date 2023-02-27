@@ -2,8 +2,9 @@ package tnet
 
 import (
 	"context"
-	"github/timzzx/tnet/types"
 	"net"
+
+	"github.com/timzzx/tnet/types"
 )
 
 type Connection struct {
