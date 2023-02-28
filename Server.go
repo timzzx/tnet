@@ -58,7 +58,6 @@ func (s *Server) Start() {
 
 		// 心跳
 		go s.heartbeat(agent)
-
 		// 监听连接关闭
 		select {
 		case <-ctx.Done():
@@ -70,7 +69,7 @@ func (s *Server) Start() {
 
 // 逻辑控制
 func (s *Server) proceess(agent types.Connection) {
-	defer s.claer(agent)
+	defer agent.Cancel()
 	for {
 		// 获取消息
 		routerID, data, err := Unpack(agent.GetConn())
