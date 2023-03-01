@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net"
+	"strconv"
 	"sync"
 	"time"
 
@@ -115,7 +116,15 @@ func (s *Server) claer(agent types.Connection) {
 
 // 根据路由调用处理逻辑
 func (s *Server) doHandler(id int, data []byte, agent types.Connection) {
-	s.Handlers[id].Do(data, agent)
+	handler, ok := s.Handlers[id]
+	if !ok {
+		// 发送消息
+		msg, _ := Pack(10000, []byte("router id: "+strconv.Itoa(id)+" error"))
+		agent.Send(msg)
+		return
+	}
+
+	handler.Do(data, agent)
 }
 
 // 连接加入全局
